@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#e05090">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Focus Miner">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<title>Focus Miner</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+:root {
+  --pink: #e05090;
+  --pink-d: #c03070;
+  --pink-l: #fce4f4;
+  --pink-ll: #fff0f8;
+  --pink-b: #e8b4d8;
+  --rose: #a0357a;
+  --rose-d: #7a2560;
+  --text: #7a2560;
+  --sub: #c48ab4;
+  --bg: #fdf4fa;
+  --card: #ffffff;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); }
+.rnd { font-family: 'M PLUS Rounded 1c', sans-serif; }
+
+/* ── 전체 레이아웃 ── */
+#app {
+  display: flex; flex-direction: column;
+  height: 100vh; height: 100dvh;
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  max-width: 430px; margin: 0 auto;
+}
+
+/* ── 상태바 영역 ── */
+.statusbar {
+  background: var(--pink-ll);
+  padding: calc(var(--safe-top) + 8px) 18px 6px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 0.5px solid var(--pink-b);
+  flex-shrink: 0;
+}
+.statusbar-time { font-size: 12px; font-weight: 500; color: var(--rose); }
+.statusbar-right { display: flex; gap: 6px; align-items: center; }
+.mining-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.mining-label { font-size: 10px; color: var(--sub); }
+
+/* ── 탑바 ── */
+.topbar {
+  background: var(--pink-ll);
+  padding: 8px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 0.5px solid var(--pink-b);
+  flex-shrink: 0;
+}
+.logo { font-size: 17px; font-weight: 800; color: var(--pink); }
+.gem-chip {
+  background: var(--pink-l); border: 1px solid var(--pink-b);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 12px; font-weight: 700; color: var(--rose);
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* ── 스크롤 본문 ── */
+.scroll-body {
+  flex: 1; overflow-y: auto; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-body::-webkit-scrollbar { display: none; }
+
+/* ── 카드 공통 ── */
+.card {
+  background: var(--card); border-radius: 18px;
+  border: 0.5px solid #f0c8e0; padding: 14px;
+}
+.section-label {
+  font-size: 10px; font-weight: 700; color: var(--sub);
+  letter-spacing: 0.08em; margin-bottom: 8px;
+}
+
+/* ── 캐릭터 쇼케이스 ── */
+.char-showcase { display: flex; gap: 12px; align-items: center; }
+.char-face {
+  width: 72px; height: 88px; border-radius: 14px;
+  background: var(--pink-l); border: 2px solid var(--pink-b);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px; position: relative; flex-shrink: 0;
+}
+.char-grade {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  background: var(--pink); color: #fff;
+  font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  white-space: nowrap;
+}
+.char-info { flex: 1; min-width: 0; }
+.char-name { font-size: 15px; font-weight: 700; color: var(--rose-d); margin-bottom: 2px; }
+.char-sub2 { font-size: 11px; color: var(--sub); margin-bottom: 8px; }
+.skill-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--pink-l); border: 1px solid var(--pink-b);
+  border-radius: 20px; padding: 3px 9px;
+  font-size: 10px; color: var(--rose); margin-bottom: 8px;
+}
+.mini-stats { display: flex; gap: 6px; }
+.ms { flex: 1; background: #fdf4fa; border-radius: 7px; padding: 4px 6px; text-align: center; }
+.ms-v { font-size: 13px; font-weight: 700; color: var(--rose); }
+.ms-l { font-size: 9px; color: var(--sub); }
+
+/* ── 궁극기 바 ── */
+.ult-row {
+  background: #fff8fe; border-radius: 12px;
+  border: 1px solid #f0c8e0; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ult-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--pink-l); border: 1px solid var(--pink-b);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.ult-info { flex: 1; }
+.ult-name { font-size: 11px; font-weight: 700; color: var(--rose); margin-bottom: 5px; }
+.ult-track { background: #f0c8e0; border-radius: 4px; height: 6px; overflow: hidden; }
+.ult-fill { height: 100%; border-radius: 4px; background: var(--pink); transition: width 1s; }
+.ult-pct { font-size: 10px; color: var(--sub); margin-top: 3px; }
+
+/* ── 타이머 ── */
+.timer-num {
+  font-size: 44px; font-weight: 800; color: var(--pink);
+  text-align: center; letter-spacing: 2px;
+  font-variant-numeric: tabular-nums; margin: 6px 0 4px;
+}
+.timer-label { font-size: 11px; color: var(--sub); text-align: center; margin-bottom: 10px; }
+.chips { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
+.chip {
+  font-size: 10px; padding: 3px 11px; border-radius: 20px; font-weight: 500;
+  transition: all 0.3s;
+}
+.chip.on { background: var(--pink-l); color: var(--rose); border: 1px solid var(--pink-b); }
+.chip.off { background: #f0f0f0; color: #aaa; border: 1px solid #e0e0e0; }
+.timer-btn-row { display: flex; gap: 8px; }
+.t-btn {
+  flex: 1; border-radius: 12px; padding: 10px; font-size: 13px;
+  font-weight: 700; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+  transition: all 0.15s;
+}
+.t-btn-main { background: var(--pink); border: none; color: #fff; }
+.t-btn-main:active { background: var(--pink-d); }
+.t-btn-sub { background: var(--pink-l); border: 1px solid var(--pink-b); color: var(--rose); }
+.t-btn-sub:active { background: #f5d0e8; }
+
+/* ── 채굴 현황 ── */
+.ore-top-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.ore-big { font-size: 26px; font-weight: 800; color: var(--rose-d); }
+.ore-badge {
+  background: var(--pink-l); border: 1px solid var(--pink-b);
+  border-radius: 12px; padding: 3px 10px;
+  font-size: 11px; font-weight: 700; color: var(--pink);
+}
+.ore-sub { font-size: 11px; color: var(--sub); margin-bottom: 8px; }
+.ore-track { background: #f0c8e0; border-radius: 6px; height: 7px; overflow: hidden; }
+.ore-fill { height: 100%; border-radius: 6px; background: var(--pink); transition: width 0.5s; }
+
+/* ── 수령 버튼 ── */
+.collect-btn {
+  width: 100%; background: var(--pink); border: none; border-radius: 16px;
+  padding: 14px; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font-family: 'M PLUS Rounded 1c', sans-serif;
+  transition: all 0.15s;
+}
+.collect-btn:active { background: var(--pink-d); transform: scale(0.98); }
+.c-badge {
+  background: rgba(255,255,255,0.25); border-radius: 8px;
+  padding: 1px 8px; font-size: 12px;
+}
+
+/* ── 소녀 목록 ── */
+.char-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.mini-char {
+  background: var(--card); border-radius: 14px;
+  border: 0.5px solid #f0c8e0; padding: 10px; text-align: center;
+  transition: transform 0.15s;
+}
+.mini-char:active { transform: scale(0.97); }
+.mini-char.locked { opacity: 0.45; }
+.mini-face { font-size: 28px; margin-bottom: 4px; }
+.mini-name { font-size: 11px; font-weight: 700; color: var(--rose-d); }
+.mini-grade { font-size: 9px; color: var(--sub); margin-top: 1px; }
+.mini-bar-wrap { background: #f0c8e0; border-radius: 3px; height: 3px; margin-top: 6px; overflow: hidden; }
+.mini-bar { height: 100%; border-radius: 3px; background: var(--pink); }
+
+/* ── 가챠 버튼 ── */
+.gacha-btn {
+  width: 100%; background: var(--rose-d); border: none; border-radius: 16px;
+  padding: 14px; font-size: 14px; font-weight: 700; color: #fff; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: 'M PLUS Rounded 1c', sans-serif; transition: all 0.15s;
+}
+.gacha-btn:active { background: #5a1545; transform: scale(0.98); }
+
+/* ── 가챠 결과 ── */
+.gacha-result {
+  background: var(--pink-ll); border-radius: 16px;
+  border: 2px solid var(--pink); padding: 16px; text-align: center;
+  display: none; animation: pop 0.3s ease;
+}
+.gacha-result.show { display: block; }
+@keyframes pop { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+.gacha-big { font-size: 48px; margin-bottom: 6px; }
+.gacha-got { font-size: 15px; font-weight: 700; color: var(--pink); }
+.gacha-rarity { font-size: 12px; color: var(--sub); margin-top: 4px; }
+
+/* ── 하단 네비 ── */
+.navbar {
+  background: var(--pink-ll);
+  border-top: 0.5px solid var(--pink-b);
+  padding: 8px 10px calc(var(--safe-bot) + 8px);
+  display: flex; justify-content: space-around;
+  flex-shrink: 0;
+}
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+.nav-item i { font-size: 22px; color: #e0b0d0; transition: color 0.2s; }
+.nav-item.on i { color: var(--pink); }
+.nav-item span { font-size: 9px; color: #e0b0d0; }
+.nav-item.on span { color: var(--pink); }
+
+/* ── 페이지 전환 ── */
+.page { display: none; flex-direction: column; gap: 10px; }
+.page.active { display: flex; }
+
+/* ── 집중 기록 차트 영역 ── */
+.week-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; padding: 0 4px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar-bg { flex: 1; width: 100%; background: #f0c8e0; border-radius: 4px; display: flex; align-items: flex-end; overflow: hidden; }
+.bar-fill { width: 100%; background: var(--pink); border-radius: 4px; transition: height 0.5s ease; }
+.bar-lbl { font-size: 9px; color: var(--sub); }
+
+/* ── 설정 페이지 ── */
+.setting-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 0.5px solid #f5e0f0;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-lbl { font-size: 13px; color: var(--text); }
+.setting-sub { font-size: 10px; color: var(--sub); margin-top: 2px; }
+.toggle {
+  width: 40px; height: 22px; border-radius: 11px; border: none; cursor: pointer;
+  position: relative; transition: background 0.3s;
+}
+.toggle.on { background: var(--pink); }
+.toggle.off { background: #ddd; }
+.toggle::after {
+  content: ''; position: absolute; top: 2px; width: 18px; height: 18px;
+  background: #fff; border-radius: 50%; transition: left 0.3s;
+}
+.toggle.on::after { left: 20px; }
+.toggle.off::after { left: 2px; }
+.dur-btn {
+  background: var(--pink-l); border: 1px solid var(--pink-b); border-radius: 8px;
+  padding: 4px 10px; font-size: 12px; color: var(--rose); cursor: pointer;
+}
+.dur-btn.sel { background: var(--pink); color: #fff; border-color: var(--pink-d); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 상태바 -->
+  <div class="statusbar">
+    <span class="statusbar-time" id="clock">00:00</span>
+    <div class="statusbar-right">
+      <div class="mining-dot" id="mining-dot"></div>
+      <span class="mining-label" id="mining-label">채굴 중</span>
+    </div>
+  </div>
+
+  <!-- 탑바 -->
+  <div class="topbar">
+    <div class="logo rnd">✦ Focus Miner</div>
+    <div class="gem-chip">
+      <i class="ti ti-diamond" style="font-size:12px;"></i>
+      <span id="gem-count">340</span>
+    </div>
+  </div>
+
+  <!-- 스크롤 본문 -->
+  <div class="scroll-body">
+
+    <!-- ── 홈 페이지 ── -->
+    <div class="page active" id="page-home">
+
+      <div class="section-label">현재 파티</div>
+      <div class="card">
+        <div class="char-showcase">
+          <div class="char-face">
+            🌙
+            <div class="char-grade rnd">★ SSR</div>
+          </div>
+          <div class="char-info">
+            <div class="char-name rnd">루나 · 달빛 마녀</div>
+            <div class="char-sub2">망상 채굴 특화 · Lv. 17</div>
+            <div class="skill-pill">
+              <i class="ti ti-sparkles" style="font-size:10px;"></i>
+              월광 폭발 — 자동 발동
+            </div>
+            <div class="mini-stats">
+              <div class="ms"><div class="ms-v">×2.4</div><div class="ms-l">채굴량</div></div>
+              <div class="ms"><div class="ms-v">94%</div><div class="ms-l">집중률</div></div>
+              <div class="ms"><div class="ms-v">A+</div><div class="ms-l">등급</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ult-row">
+        <div class="ult-icon">✨</div>
+        <div class="ult-info">
+          <div class="ult-name">월광 폭발 충전 중</div>
+          <div class="ult-track"><div class="ult-fill" id="ult-fill" style="width:72%;"></div></div>
+          <div class="ult-pct" id="ult-pct">72% — 자동 발동 준비 중</div>
+        </div>
+      </div>
+
+      <div class="section-label">집중 타이머</div>
+      <div class="card">
+        <div class="timer-num rnd" id="timer">25:00</div>
+        <div class="timer-label">집중하는 동안 루나가 망상을 채굴해요</div>
+        <div class="chips">
+          <span class="chip on" id="chip-focus">집중 중</span>
+          <span class="chip on" id="chip-mine">채굴 중</span>
+        </div>
+        <div class="timer-btn-row">
+          <button class="t-btn t-btn-main" id="timer-btn" onclick="toggleTimer()">
+            <i class="ti ti-player-pause"></i> 일시정지
+          </button>
+          <button class="t-btn t-btn-sub" onclick="resetTimer()">
+            <i class="ti ti-refresh"></i> 초기화
+          </button>
+        </div>
+      </div>
+
+      <div class="section-label">채굴 현황</div>
+      <div class="card">
+        <div class="ore-top-row">
+          <div>
+            <div class="ore-big rnd" id="ore-num">286개</div>
+            <div class="ore-sub">오늘 채굴한 망상 조각</div>
+          </div>
+          <div class="ore-badge" id="ore-badge">+48 대기</div>
+        </div>
+        <div class="ore-track"><div class="ore-fill" id="ore-fill" style="width:57%;"></div></div>
+      </div>
+
+      <button class="collect-btn" id="collect-btn" onclick="collectAll()">
+        <i class="ti ti-package-import" style="font-size:17px;"></i>
+        모두 수령하기
+        <span class="c-badge" id="collect-badge">+48</span>
+      </button>
+
+    </div><!-- /page-home -->
+
+    <!-- ── 소녀들 페이지 ── -->
+    <div class="page" id="page-girls">
+      <div class="section-label">내 소녀들</div>
+      <div class="char-grid">
+        <div class="mini-char">
+          <div class="mini-face">🌙</div>
+          <div class="mini-name rnd">루나</div>
+          <div class="mini-grade">★★★ SSR · Lv.17</div>
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:88%;"></div></div>
+        </div>
+        <div class="mini-char">
+          <div class="mini-face">🌸</div>
+          <div class="mini-name rnd">하루카</div>
+          <div class="mini-grade">★★ SR · Lv.9</div>
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:54%;"></div></div>
+        </div>
+        <div class="mini-char locked">
+          <div class="mini-face">❓</div>
+          <div class="mini-name rnd">???</div>
+          <div class="mini-grade">미획득</div>
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:0%;"></div></div>
+        </div>
+        <div class="mini-char locked">
+          <div class="mini-face">❓</div>
+          <div class="mini-name rnd">???</div>
+          <div class="mini-grade">미획득</div>
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:0%;"></div></div>
+        </div>
+        <div class="mini-char locked">
+          <div class="mini-face">❓</div>
+          <div class="mini-name rnd">???</div>
+          <div class="mini-grade">미획득</div>
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:0%;"></div></div>
+        </div>
+        <div class="mini-char locked">
+          <div class="mini-face">❓</div>
+          <div class="mini-name rnd">???</div>
+          <div class="mini-grade">미획득</div>
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:0%;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 소환 페이지 ── -->
+    <div class="page" id="page-gacha">
+      <div class="section-label">망상 소환소</div>
+      <div class="card" style="text-align:center;padding:20px 14px;">
+        <div style="font-size:42px;margin-bottom:8px;">🌀</div>
+        <div class="rnd" style="font-size:16px;font-weight:800;color:var(--rose-d);margin-bottom:4px;">망상 결정체 소환</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.6;">
+          공기 중을 떠다니는 망상과 꿈 파편을<br>모아 새로운 소녀를 탄생시켜요
+        </div>
+        <div style="margin:14px 0;padding:10px;background:var(--pink-l);border-radius:10px;font-size:11px;color:var(--rose);">
+          ★★★ SSR 3% &nbsp;|&nbsp; ★★ SR 17% &nbsp;|&nbsp; ★ R 80%
+        </div>
+      </div>
+
+      <button class="gacha-btn" onclick="doGacha()">
+        <i class="ti ti-wand" style="font-size:16px;"></i>
+        소환하기 — 젬 150 소모
+      </button>
+      <button class="gacha-btn" style="background:#5a1e72;" onclick="doGacha10()">
+        <i class="ti ti-wand" style="font-size:16px;"></i>
+        10연 소환 — 젬 1400 소모
+      </button>
+
+      <div class="gacha-result" id="gacha-result">
+        <div class="gacha-big" id="gacha-emoji">🌸</div>
+        <div class="gacha-got rnd" id="gacha-name">하루카 · 벚꽃 검사</div>
+        <div class="gacha-rarity" id="gacha-rarity">★★ SR 획득!</div>
+      </div>
+    </div>
+
+    <!-- ── 기록 페이지 ── -->
+    <div class="page" id="page-record">
+      <div class="section-label">이번 주 집중 기록</div>
+      <div class="card">
+        <div class="week-chart" id="week-chart"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;">
+          <div style="text-align:center;">
+            <div class="rnd" style="font-size:18px;font-weight:800;color:var(--rose-d);">12h 34m</div>
+            <div style="font-size:10px;color:var(--sub);">이번 주 총합</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="rnd" style="font-size:18px;font-weight:800;color:var(--rose-d);">1,820</div>
+            <div style="font-size:10px;color:var(--sub);">채굴한 망상 조각</div>
+          </div>
+          <div style="text-align:center;">
+            <div class="rnd" style="font-size:18px;font-weight:800;color:var(--rose-d);">7</div>
+            <div style="font-size:10px;color:var(--sub);">연속 집중일</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-label">오늘 세션</div>
+      <div class="card">
+        <div style="display:flex;flex-direction:column;gap:8px;" id="session-list">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid #f5e0f0;">
+            <div><div style="font-size:12px;font-weight:500;color:var(--text);">오전 세션</div><div style="font-size:10px;color:var(--sub);">09:20 — 09:45</div></div>
+            <div class="rnd" style="font-size:13px;font-weight:700;color:var(--pink);">25분</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid #f5e0f0;">
+            <div><div style="font-size:12px;font-weight:500;color:var(--text);">오후 세션</div><div style="font-size:10px;color:var(--sub);">14:10 — 15:00</div></div>
+            <div class="rnd" style="font-size:13px;font-weight:700;color:var(--pink);">50분</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;">
+            <div><div style="font-size:12px;font-weight:500;color:var(--text);">저녁 세션</div><div style="font-size:10px;color:var(--sub);">현재 진행 중</div></div>
+            <div class="rnd" style="font-size:13px;font-weight:700;color:var(--pink);" id="cur-session">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 설정 페이지 ── -->
+    <div class="page" id="page-setting">
+      <div class="section-label">타이머 설정</div>
+      <div class="card">
+        <div class="setting-row">
+          <div>
+            <div class="setting-lbl">집중 시간</div>
+            <div class="setting-sub">한 세션 기본 집중 길이</div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="dur-btn" onclick="setDuration(15,this)">15분</button>
+            <button class="dur-btn sel" onclick="setDuration(25,this)">25분</button>
+            <button class="dur-btn" onclick="setDuration(50,this)">50분</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-lbl">알림 허용</div>
+            <div class="setting-sub">궁극기 발동 · 채굴 완료 알림</div>
+          </div>
+          <button class="toggle on" id="tog-notif" onclick="toggleSetting('notif')"></button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-lbl">미접속 페널티</div>
+            <div class="setting-sub">미접속 기간 절반만 캐릭터 휴식</div>
+          </div>
+          <button class="toggle on" id="tog-penalty" onclick="toggleSetting('penalty')"></button>
+        </div>
+      </div>
+      <div class="section-label">앱 정보</div>
+      <div class="card">
+        <div class="setting-row">
+          <div class="setting-lbl">버전</div>
+          <div style="font-size:12px;color:var(--sub);">Focus Miner v0.1.0</div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-lbl">제작</div>
+          <div style="font-size:12px;color:var(--sub);">2020114237 김예림</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /scroll-body -->
+
+  <!-- 하단 네비 -->
+  <nav class="navbar">
+    <div class="nav-item on" onclick="goPage('home',this)">
+      <i class="ti ti-home"></i><span>홈</span>
+    </div>
+    <div class="nav-item" onclick="goPage('girls',this)">
+      <i class="ti ti-users"></i><span>소녀들</span>
+    </div>
+    <div class="nav-item" onclick="goPage('gacha',this)">
+      <i class="ti ti-wand"></i><span>소환</span>
+    </div>
+    <div class="nav-item" onclick="goPage('record',this)">
+      <i class="ti ti-chart-bar"></i><span>기록</span>
+    </div>
+    <div class="nav-item" onclick="goPage('setting',this)">
+      <i class="ti ti-settings"></i><span>설정</span>
+    </div>
+  </nav>
+
+</div><!-- /app -->
+
+<script>
+// ── 상태 ──────────────────────────────────────────
+const S = {
+  secs: 25 * 60,
+  totalSecs: 25 * 60,
+  running: true,
+  ore: 286,
+  pending: 48,
+  ult: 72,
+  gems: 340,
+  ultActive: false,         // 궁극기 발동 중 여부
+  ultActiveUntil: 0,        // 궁극기 종료 시각 (epoch ms)
+  settings: { notif: false, penalty: true },
+  sessionStart: Date.now(),
+};
+
+// ── 유틸 ──────────────────────────────────────────
+const pad = n => String(n).padStart(2, '0');
+const $ = id => document.getElementById(id);
+
+// ── localStorage 저장/복원 ────────────────────────
+function saveState() {
+  localStorage.setItem('fm_state', JSON.stringify({
+    secs: S.secs,
+    totalSecs: S.totalSecs,
+    running: S.running,
+    ore: S.ore,
+    pending: S.pending,
+    ult: S.ult,
+    gems: S.gems,
+    ultActive: S.ultActive,
+    ultActiveUntil: S.ultActiveUntil,
+    savedAt: Date.now(),       // 저장 시각
+    sessionStart: S.sessionStart,
+  }));
+}
+
+function loadState() {
+  const raw = localStorage.getItem('fm_state');
+  if (!raw) return;
+  const saved = JSON.parse(raw);
+  const elapsed = Math.floor((Date.now() - saved.savedAt) / 1000); // 이탈한 시간(초)
+
+  // 이탈 중엔 타이머 멈춤 — 경과 시간 반영 없이 그대로 복원
+  S.secs        = saved.secs;
+  S.totalSecs   = saved.totalSecs;
+  S.ore         = saved.ore;
+  S.pending     = saved.pending;
+  S.ult         = saved.ult;
+  S.gems        = saved.gems;
+  S.ultActive   = saved.ultActive && (saved.ultActiveUntil > Date.now());
+  S.ultActiveUntil = saved.ultActiveUntil;
+  S.sessionStart = saved.sessionStart;
+
+  // 이탈했다가 돌아온 것 → 자동으로 타이머 재시작
+  S.running = true;
+}
+
+// ── 시계 ──────────────────────────────────────────
+function updateClock() {
+  const d = new Date();
+  $('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── 타이머 렌더 ───────────────────────────────────
+function renderTimer() {
+  $('timer').textContent = pad(Math.floor(S.secs / 60)) + ':' + pad(S.secs % 60);
+}
+
+// ── 궁극기 자동 발동 ──────────────────────────────
+function fireUlt() {
+  S.ult = 0;
+  S.ultActive = true;
+  S.ultActiveUntil = Date.now() + 3 * 60 * 1000; // 3분간 채굴량 3배
+  $('ult-fill').style.width = '0%';
+  $('ult-pct').textContent = '🌟 월광 폭발 발동 중! (3분)';
+  $('ult-fill').style.background = 'linear-gradient(90deg,#f0c020,#ff80c0)';
+  notify('🌟 월광 폭발!', '루나의 궁극기 발동! 3분간 채굴량 3배!');
+  // 3분 후 궁극기 종료
+  setTimeout(() => {
+    S.ultActive = false;
+    $('ult-fill').style.background = 'var(--pink)';
+    $('ult-pct').textContent = '0% — 충전 중';
+  }, 3 * 60 * 1000);
+}
+
+// ── 메인 tick ─────────────────────────────────────
+function tick() {
+  if (!S.running) return;
+
+  // 타이머 카운트다운
+  if (S.secs > 0) {
+    S.secs--;
+    renderTimer();
+  } else {
+    // 세션 완료
+    onSessionComplete();
+    return;
+  }
+
+  // 1분(60초)마다 망상 조각 채굴
+  if (S.secs % 60 === 0) {
+    const amount = S.ultActive ? 3 : 1; // 궁극기 발동 중이면 3배
+    S.ore     += amount;
+    S.pending += amount;
+    updateOreUI();
+  }
+
+  // 궁극기 충전 (10초마다 +5%)
+  if (S.secs % 10 === 0 && !S.ultActive) {
+    if (S.ult < 100) {
+      S.ult = Math.min(100, S.ult + 5);
+      $('ult-fill').style.width = S.ult + '%';
+      $('ult-pct').textContent = S.ult + '% — 충전 중';
+      if (S.ult >= 100) fireUlt(); // 자동 발동
+    }
+  }
+
+  // 현재 세션 시간 표시
+  const curEl = $('cur-session');
+  if (curEl) {
+    const m = Math.floor((Date.now() - S.sessionStart) / 60000);
+    curEl.textContent = m + '분';
+  }
+
+  // 5초마다 상태 저장
+  if (S.secs % 5 === 0) saveState();
+}
+
+setInterval(tick, 1000);
+
+// ── 세션 완료 ─────────────────────────────────────
+function onSessionComplete() {
+  S.running = false;
+  const bonus = 5; // 세션 완료 보너스
+  S.ore += bonus; S.pending += bonus;
+  updateOreUI();
+  notify('✨ 세션 완료!', '루나가 망상 조각 보너스 5개를 채굴했어요!');
+  setRunningUI(false);
+  $('mining-label').textContent = '완료!';
+  saveState();
+}
+
+// ── 타이머 UI 헬퍼 ───────────────────────────────
+function setRunningUI(on) {
+  if (on) {
+    $('timer-btn').innerHTML = '<i class="ti ti-player-pause"></i> 일시정지';
+    $('chip-focus').className = 'chip on';
+    $('chip-mine').className  = 'chip on';
+    $('mining-dot').style.background = '#4ade80';
+    $('mining-label').textContent = '채굴 중';
+  } else {
+    $('timer-btn').innerHTML = '<i class="ti ti-player-play"></i> 재개';
+    $('chip-focus').className = 'chip off';
+    $('chip-mine').className  = 'chip off';
+    $('mining-dot').style.background = '#ccc';
+    $('mining-label').textContent = '일시정지';
+  }
+}
+
+function toggleTimer() {
+  S.running = !S.running;
+  setRunningUI(S.running);
+  saveState();
+}
+
+function resetTimer() {
+  S.secs = S.totalSecs;
+  S.running = true;
+  S.sessionStart = Date.now();
+  renderTimer();
+  setRunningUI(true);
+  saveState();
+}
+
+// ── 앱 이탈 감지 → 타이머 멈춤 / 복귀 → 재시작 ──
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // 이탈: 타이머 멈추고 상태 저장
+    S.running = false;
+    saveState();
+  } else {
+    // 복귀: 저장된 상태 불러오고 타이머 자동 재시작
+    loadState();
+    renderTimer();
+    updateOreUI();
+    $('ult-fill').style.width = S.ult + '%';
+    $('ult-pct').textContent  = S.ult >= 100
+      ? '🌟 발동 준비 완료!'
+      : S.ult + '% — 충전 중';
+    $('gem-count').textContent = S.gems;
+    setRunningUI(true);
+  }
+});
+
+// ── 채굴 UI ──────────────────────────────────────
+function updateOreUI() {
+  $('ore-num').textContent = S.ore + '개';
+  $('ore-badge').textContent = '+' + S.pending + ' 대기';
+  $('collect-badge').textContent = '+' + S.pending;
+  const pct = Math.min(100, (S.ore / 500) * 100);
+  $('ore-fill').style.width = pct + '%';
+  $('ore-top') && ($('ore-top').textContent = S.ore);
+}
+
+function collectAll() {
+  if (S.pending === 0) return;
+  S.ore += S.pending;
+  S.pending = 0;
+  updateOreUI();
+  const btn = $('collect-btn');
+  btn.style.background = 'var(--rose)';
+  btn.innerHTML = '<i class="ti ti-check" style="font-size:17px;"></i> 수령 완료!';
+  setTimeout(() => {
+    btn.style.background = 'var(--pink)';
+    btn.innerHTML = '<i class="ti ti-package-import" style="font-size:17px;"></i> 모두 수령하기 <span class="c-badge" id="collect-badge">+0</span>';
+  }, 2000);
+}
+
+// ── 가챠 ─────────────────────────────────────────
+const pool = [
+  { emoji:'🌟', name:'아리아 · 별빛 용사', rarity:'★★★ SSR 획득!!' },
+  { emoji:'🌙', name:'루나 · 달빛 마녀', rarity:'★★★ SSR 획득!!' },
+  { emoji:'🌸', name:'하루카 · 벚꽃 검사', rarity:'★★ SR 획득!' },
+  { emoji:'❄️', name:'시로하 · 빙결 마법사', rarity:'★★ SR 획득!' },
+  { emoji:'🔥', name:'카렌 · 불꽃 무희', rarity:'★★ SR 획득!' },
+  { emoji:'🍀', name:'미도리 · 초록 정령', rarity:'★ R 획득' },
+  { emoji:'💧', name:'아오이 · 물의 치유사', rarity:'★ R 획득' },
+  { emoji:'⚡', name:'라이코 · 번개 닌자', rarity:'★ R 획득' },
+];
+function getRandom() {
+  const r = Math.random();
+  const ssr = pool.filter(p => p.rarity.includes('SSR'));
+  const sr = pool.filter(p => p.rarity.includes('SR') && !p.rarity.includes('SSR'));
+  const rr = pool.filter(p => p.rarity.startsWith('★ R'));
+  if (r < 0.03) return ssr[Math.floor(Math.random()*ssr.length)];
+  if (r < 0.20) return sr[Math.floor(Math.random()*sr.length)];
+  return rr[Math.floor(Math.random()*rr.length)];
+}
+function showGacha(item) {
+  $('gacha-emoji').textContent = item.emoji;
+  $('gacha-name').textContent = item.name;
+  $('gacha-rarity').textContent = item.rarity;
+  const el = $('gacha-result');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+function doGacha() {
+  if (S.gems < 150) { alert('젬이 부족해요!'); return; }
+  S.gems -= 150;
+  $('gem-count').textContent = S.gems;
+  showGacha(getRandom());
+}
+function doGacha10() {
+  if (S.gems < 1400) { alert('젬이 부족해요!'); return; }
+  S.gems -= 1400;
+  $('gem-count').textContent = S.gems;
+  showGacha(getRandom());
+}
+
+// ── 페이지 전환 ───────────────────────────────────
+function goPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+  $('page-' + name).classList.add('active');
+  el.classList.add('on');
+  document.querySelector('.scroll-body').scrollTop = 0;
+}
+
+// ── 주간 차트 그리기 ──────────────────────────────
+const weekData = [
+  {lbl:'월', min:95}, {lbl:'화', min:120}, {lbl:'수', min:60},
+  {lbl:'목', min:150}, {lbl:'금', min:80}, {lbl:'토', min:110},
+  {lbl:'일', min:45}
+];
+function drawChart() {
+  const el = $('week-chart');
+  if (!el) return;
+  const max = Math.max(...weekData.map(d => d.min));
+  el.innerHTML = weekData.map(d => `
+    <div class="bar-col">
+      <div class="bar-bg">
+        <div class="bar-fill" style="height:${Math.round((d.min/max)*100)}%;"></div>
+      </div>
+      <div class="bar-lbl">${d.lbl}</div>
+    </div>
+  `).join('');
+}
+drawChart();
+
+// ── 설정 ─────────────────────────────────────────
+function toggleSetting(key) {
+  S.settings[key] = !S.settings[key];
+  const el = $('tog-' + key);
+  if (el) el.className = 'toggle ' + (S.settings[key] ? 'on' : 'off');
+  if (key === 'notif' && S.settings.notif) requestNotif();
+}
+function setDuration(min, btn) {
+  S.totalSecs = min * 60;
+  S.secs = S.totalSecs;
+  S.running = false;
+  renderTimer();
+  $('timer-btn').innerHTML = '<i class="ti ti-player-play"></i> 시작';
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+// ── 알림 ─────────────────────────────────────────
+async function requestNotif() {
+  if (!('Notification' in window)) return;
+  const perm = await Notification.requestPermission();
+  S.settings.notif = perm === 'granted';
+  $('tog-notif').className = 'toggle ' + (S.settings.notif ? 'on' : 'off');
+}
+function notify(title, body) {
+  if (!S.settings.notif) return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body, icon: './icons/icon-192.png' });
+  }
+}
+
+// ── PWA 서비스 워커 등록 ──────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW:', e));
+}
+
+// ── 초기화 — 저장 상태 복원 후 타이머 시작 ──────
+loadState();
+renderTimer();
+updateOreUI();
+$('ult-fill').style.width = S.ult + '%';
+$('ult-pct').textContent  = S.ult + '% — 충전 중';
+$('gem-count').textContent = S.gems;
+setRunningUI(S.running);
+</script>
+</body>
+</html>
