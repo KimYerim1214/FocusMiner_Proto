@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#e05090">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Focus Miner">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<title>Focus Miner</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+:root {
+  --pink:#e05090;--pink-d:#c03070;--pink-l:#fce4f4;--pink-ll:#fff0f8;
+  --pink-b:#e8b4d8;--rose:#a0357a;--rose-d:#7a2560;--sub:#c48ab4;
+  --bg:#fdf4fa;--card:#ffffff;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+.rnd{font-family:'M PLUS Rounded 1c',sans-serif;}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;font-family:'Noto Sans KR',sans-serif;background:var(--bg);max-width:430px;margin:0 auto;}
+
+.statusbar{background:var(--pink-ll);padding:calc(var(--safe-top) + 8px) 18px 6px;display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--pink-b);flex-shrink:0;}
+.statusbar-time{font-size:12px;font-weight:500;color:var(--rose);}
+.statusbar-right{display:flex;gap:6px;align-items:center;}
+.mining-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.mining-label{font-size:10px;color:var(--sub);}
+
+.topbar{background:var(--pink-ll);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--pink-b);flex-shrink:0;}
+.logo{font-size:17px;font-weight:800;color:var(--pink);}
+.gem-chip{background:var(--pink-l);border:1px solid var(--pink-b);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--rose);display:flex;align-items:center;gap:4px;}
+
+/* 소녀 탭 */
+.girl-tabs{display:flex;gap:6px;padding:8px 12px;background:var(--pink-ll);border-bottom:.5px solid var(--pink-b);overflow-x:auto;flex-shrink:0;}
+.girl-tabs::-webkit-scrollbar{display:none;}
+.gtab{flex-shrink:0;background:var(--pink-l);border:1px solid var(--pink-b);border-radius:10px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;display:flex;align-items:center;gap:4px;}
+.gtab.on{background:var(--pink);border-color:var(--pink-d);color:#fff;}
+
+/* 채굴 씬 */
+.scene-wrap{position:relative;width:100%;height:210px;overflow:hidden;background:#0a0520;flex-shrink:0;}
+canvas#mine-cv{position:absolute;top:0;left:0;width:100%;height:100%;}
+.scene-hud{position:absolute;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;}
+.hud-chip{background:rgba(10,5,32,.75);border:1px solid rgba(255,100,180,.4);border-radius:10px;padding:3px 9px;font-size:11px;font-weight:700;color:#ffb8e0;}
+.ult-wrap{position:absolute;bottom:8px;left:10px;right:10px;pointer-events:none;}
+.ult-track{background:rgba(255,255,255,.15);border-radius:4px;height:6px;overflow:hidden;}
+.ult-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#ff60b0,#ffe060);transition:width .8s ease;}
+.ult-lbl{font-size:10px;color:#ffb8e0;margin-bottom:3px;display:flex;justify-content:space-between;}
+
+/* 스크롤 본문 */
+.scroll-body{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch;}
+.scroll-body::-webkit-scrollbar{display:none;}
+.card{background:var(--card);border-radius:16px;border:.5px solid #f0c8e0;padding:13px;}
+.section-label{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.08em;margin-bottom:7px;}
+
+.ore-row{display:flex;gap:8px;}
+.ore-card{flex:1;background:var(--card);border-radius:12px;border:.5px solid #f0c8e0;padding:10px 12px;}
+.ore-val{font-size:20px;font-weight:800;color:var(--rose-d);}
+.ore-lbl{font-size:10px;color:var(--sub);margin-top:1px;}
+.ore-badge{background:var(--pink-l);border:1px solid var(--pink-b);border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--pink);align-self:flex-start;margin-top:3px;}
+
+.timer-num{font-size:38px;font-weight:800;color:var(--pink);text-align:center;font-variant-numeric:tabular-nums;letter-spacing:2px;margin:4px 0 3px;}
+.timer-sub{font-size:10px;color:var(--sub);text-align:center;margin-bottom:10px;}
+.timer-btns{display:flex;gap:7px;}
+.tb{flex:1;border-radius:11px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.tb-main{background:var(--pink);border:none;color:#fff;}
+.tb-main:active{background:var(--pink-d);}
+.tb-sub{background:var(--pink-l);border:1px solid var(--pink-b);color:var(--rose);}
+
+.collect-btn{width:100%;background:var(--pink);border:none;border-radius:15px;padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'M PLUS Rounded 1c',sans-serif;}
+.collect-btn:active{background:var(--pink-d);}
+.c-badge{background:rgba(255,255,255,.25);border-radius:7px;padding:1px 7px;font-size:12px;}
+
+/* 소녀 도감 */
+.char-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.mini-char{background:var(--card);border-radius:13px;border:.5px solid #f0c8e0;padding:10px;text-align:center;}
+.mini-char.locked{opacity:.4;}
+.mini-face{font-size:26px;margin-bottom:3px;}
+.mini-name{font-size:11px;font-weight:700;color:var(--rose-d);}
+.mini-grade{font-size:9px;color:var(--sub);margin-top:1px;}
+.mini-bar-w{background:#f0c8e0;border-radius:3px;height:3px;margin-top:5px;overflow:hidden;}
+.mini-bar{height:100%;border-radius:3px;background:var(--pink);}
+
+/* 가챠 */
+.gacha-btn{width:100%;background:var(--rose-d);border:none;border-radius:15px;padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'M PLUS Rounded 1c',sans-serif;}
+.gacha-btn:active{background:#5a1545;}
+.gacha-result{background:var(--pink-ll);border-radius:15px;border:2px solid var(--pink);padding:16px;text-align:center;display:none;animation:pop .3s ease;}
+.gacha-result.show{display:block;}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* 주간 차트 */
+.week-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-bg{flex:1;width:100%;background:#f0c8e0;border-radius:4px;display:flex;align-items:flex-end;overflow:hidden;}
+.bar-fill{width:100%;background:var(--pink);border-radius:4px;}
+.bar-lbl{font-size:9px;color:var(--sub);}
+
+/* 설정 */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid #f5e0f0;}
+.setting-row:last-child{border-bottom:none;}
+.setting-lbl{font-size:13px;color:var(--rose-d);}
+.setting-sub{font-size:10px;color:var(--sub);margin-top:2px;}
+.toggle{width:40px;height:22px;border-radius:11px;border:none;cursor:pointer;position:relative;transition:background .3s;}
+.toggle.on{background:var(--pink);}
+.toggle.off{background:#ddd;}
+.toggle::after{content:'';position:absolute;top:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:left .3s;}
+.toggle.on::after{left:20px;}
+.toggle.off::after{left:2px;}
+.dur-btn{background:var(--pink-l);border:1px solid var(--pink-b);border-radius:8px;padding:4px 10px;font-size:12px;color:var(--rose);cursor:pointer;}
+.dur-btn.sel{background:var(--pink);color:#fff;border-color:var(--pink-d);}
+
+/* 페이지 */
+.page{display:none;flex-direction:column;gap:9px;}
+.page.active{display:flex;}
+
+/* 하단 네비 */
+.navbar{background:var(--pink-ll);border-top:.5px solid var(--pink-b);padding:8px 10px calc(var(--safe-bot) + 8px);display:flex;justify-content:space-around;flex-shrink:0;}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;}
+.nav-item i{font-size:22px;color:#e0b0d0;}
+.nav-item.on i{color:var(--pink);}
+.nav-item span{font-size:9px;color:#e0b0d0;}
+.nav-item.on span{color:var(--pink);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="statusbar">
+    <span class="statusbar-time rnd" id="clock">00:00</span>
+    <div class="statusbar-right">
+      <div class="mining-dot" id="mining-dot"></div>
+      <span class="mining-label" id="mining-label">채굴 중</span>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="logo rnd">✦ Focus Miner</div>
+    <div class="gem-chip"><i class="ti ti-diamond" style="font-size:12px;"></i><span id="gem-count">340</span></div>
+  </div>
+
+  <!-- 소녀 탭 (홈에서만 보임) -->
+  <div class="girl-tabs" id="girl-tabs"></div>
+
+  <!-- 채굴 씬 (홈에서만 보임) -->
+  <div class="scene-wrap" id="scene-wrap">
+    <canvas id="mine-cv" width="340" height="210"></canvas>
+    <div class="scene-hud">
+      <div class="hud-chip" id="hud-name">🌙 루나 · 달빛 마녀</div>
+      <div class="hud-chip" id="hud-grade">★★★ SSR</div>
+    </div>
+    <div class="ult-wrap">
+      <div class="ult-lbl"><span id="ult-skill">월광 폭발</span><span id="ult-pct">72%</span></div>
+      <div class="ult-track"><div class="ult-fill" id="ult-fill" style="width:72%;"></div></div>
+    </div>
+  </div>
+
+  <div class="scroll-body">
+
+    <!-- 홈 -->
+    <div class="page active" id="page-home">
+      <div class="ore-row">
+        <div class="ore-card">
+          <div class="ore-val rnd" id="ore-num">286</div>
+          <div class="ore-lbl">망상 조각</div>
+          <div class="ore-badge" id="ore-badge">+48 대기</div>
+        </div>
+        <div class="ore-card">
+          <div class="ore-val rnd" id="sess-time">0분</div>
+          <div class="ore-lbl">오늘 집중</div>
+          <div class="ore-badge" style="background:#f0fce8;border-color:#c8e8b0;color:#3a7a20;">연속 7일</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="timer-num rnd" id="timer">25:00</div>
+        <div class="timer-sub" id="timer-sub">집중하는 동안 루나가 망상을 채굴해요</div>
+        <div class="timer-btns">
+          <button class="tb tb-main" id="timer-btn" onclick="toggleTimer()"><i class="ti ti-player-pause"></i> 일시정지</button>
+          <button class="tb tb-sub" onclick="resetTimer()"><i class="ti ti-refresh"></i> 초기화</button>
+        </div>
+      </div>
+      <button class="collect-btn" id="collect-btn" onclick="collectAll()">
+        <i class="ti ti-package-import" style="font-size:16px;"></i>
+        모두 수령하기
+        <span class="c-badge" id="collect-badge">+48</span>
+      </button>
+    </div>
+
+    <!-- 소녀들 -->
+    <div class="page" id="page-girls">
+      <div class="section-label">내 소녀들</div>
+      <div class="char-grid" id="char-grid"></div>
+    </div>
+
+    <!-- 소환 -->
+    <div class="page" id="page-gacha">
+      <div class="section-label">망상 소환소</div>
+      <div class="card" style="text-align:center;padding:20px 14px;">
+        <div style="font-size:40px;margin-bottom:8px;">🌀</div>
+        <div class="rnd" style="font-size:16px;font-weight:800;color:var(--rose-d);margin-bottom:4px;">망상 결정체 소환</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.7;">공기 중을 떠다니는 망상과 꿈 파편을<br>모아 새로운 소녀를 탄생시켜요</div>
+        <div style="margin:14px 0;padding:10px;background:var(--pink-l);border-radius:10px;font-size:11px;color:var(--rose);">★★★ SSR 3%&nbsp;&nbsp;|&nbsp;&nbsp;★★ SR 17%&nbsp;&nbsp;|&nbsp;&nbsp;★ R 80%</div>
+      </div>
+      <button class="gacha-btn" onclick="doGacha()"><i class="ti ti-wand" style="font-size:15px;"></i> 소환하기 — 젬 150</button>
+      <button class="gacha-btn" style="background:#5a1e72;margin-top:2px;" onclick="doGacha10()"><i class="ti ti-wand" style="font-size:15px;"></i> 10연 소환 — 젬 1400</button>
+      <div class="gacha-result" id="gacha-result">
+        <div style="font-size:46px;margin-bottom:6px;" id="gacha-emoji">🌸</div>
+        <div class="rnd" style="font-size:15px;font-weight:800;color:var(--pink);" id="gacha-name">하루카 · 벚꽃 검사</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px;" id="gacha-rarity">★★ SR 획득!</div>
+      </div>
+    </div>
+
+    <!-- 기록 -->
+    <div class="page" id="page-record">
+      <div class="section-label">이번 주 집중 기록</div>
+      <div class="card">
+        <div class="week-chart" id="week-chart"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;">
+          <div style="text-align:center;"><div class="rnd" style="font-size:18px;font-weight:800;color:var(--rose-d);">12h 34m</div><div style="font-size:10px;color:var(--sub);">이번 주 총합</div></div>
+          <div style="text-align:center;"><div class="rnd" style="font-size:18px;font-weight:800;color:var(--rose-d);">1,820</div><div style="font-size:10px;color:var(--sub);">채굴한 망상 조각</div></div>
+          <div style="text-align:center;"><div class="rnd" style="font-size:18px;font-weight:800;color:var(--rose-d);">7</div><div style="font-size:10px;color:var(--sub);">연속 집중일</div></div>
+        </div>
+      </div>
+      <div class="section-label">오늘 세션</div>
+      <div class="card" style="display:flex;flex-direction:column;gap:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f5e0f0;"><div><div style="font-size:12px;font-weight:500;color:var(--rose-d);">오전 세션</div><div style="font-size:10px;color:var(--sub);">09:20 — 09:45</div></div><div class="rnd" style="font-size:13px;font-weight:700;color:var(--pink);">25분</div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid #f5e0f0;"><div><div style="font-size:12px;font-weight:500;color:var(--rose-d);">오후 세션</div><div style="font-size:10px;color:var(--sub);">14:10 — 15:00</div></div><div class="rnd" style="font-size:13px;font-weight:700;color:var(--pink);">50분</div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;"><div><div style="font-size:12px;font-weight:500;color:var(--rose-d);">현재 세션</div><div style="font-size:10px;color:var(--sub);">진행 중</div></div><div class="rnd" style="font-size:13px;font-weight:700;color:var(--pink);" id="cur-session">—</div></div>
+      </div>
+    </div>
+
+    <!-- 설정 -->
+    <div class="page" id="page-setting">
+      <div class="section-label">타이머 설정</div>
+      <div class="card">
+        <div class="setting-row">
+          <div><div class="setting-lbl">집중 시간</div><div class="setting-sub">한 세션 기본 집중 길이</div></div>
+          <div style="display:flex;gap:4px;">
+            <button class="dur-btn sel" onclick="setDuration(30,this)">30분</button>
+            <button class="dur-btn" onclick="setDuration(60,this)">1시간</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-lbl">직접 설정</div><div class="setting-sub">1~999분 사이로 입력</div></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input id="custom-input" type="number" min="1" max="999" placeholder="분"
+              style="width:54px;border:1px solid var(--pink-b);border-radius:8px;padding:4px 8px;font-size:13px;color:var(--rose-d);text-align:center;outline:none;background:var(--pink-l);">
+            <button class="dur-btn" onclick="applyCustomTime()" style="white-space:nowrap;">적용</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-lbl">세션 자동 재개</div><div class="setting-sub">시간 종료 후 자동으로 다음 세션 시작</div></div>
+          <button class="toggle off" id="tog-autoRestart" onclick="toggleSetting('autoRestart')"></button>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-lbl">알림 허용</div><div class="setting-sub">궁극기 발동 · 세션 완료 알림</div></div>
+          <button class="toggle on" id="tog-notif" onclick="toggleSetting('notif')"></button>
+        </div>
+        <div class="setting-row">
+          <div><div class="setting-lbl">미접속 페널티</div><div class="setting-sub">미접속 기간 절반만 캐릭터 휴식</div></div>
+          <button class="toggle on" id="tog-penalty" onclick="toggleSetting('penalty')"></button>
+        </div>
+      </div>
+      <div class="section-label">앱 정보</div>
+      <div class="card">
+        <div class="setting-row"><div class="setting-lbl">버전</div><div style="font-size:12px;color:var(--sub);">Focus Miner v0.2.0</div></div>
+        <div class="setting-row"><div class="setting-lbl">제작</div><div style="font-size:12px;color:var(--sub);">2020114237 김예림</div></div>
+      </div>
+    </div>
+
+  </div><!-- /scroll-body -->
+
+  <nav class="navbar">
+    <div class="nav-item on" onclick="goPage('home',this)"><i class="ti ti-home"></i><span>홈</span></div>
+    <div class="nav-item" onclick="goPage('girls',this)"><i class="ti ti-users"></i><span>소녀들</span></div>
+    <div class="nav-item" onclick="goPage('gacha',this)"><i class="ti ti-wand"></i><span>소환</span></div>
+    <div class="nav-item" onclick="goPage('record',this)"><i class="ti ti-chart-bar"></i><span>기록</span></div>
+    <div class="nav-item" onclick="goPage('setting',this)"><i class="ti ti-settings"></i><span>설정</span></div>
+  </nav>
+
+</div>
+
+<script>
+// ══════════════════════════════════════
+// 소녀 데이터 (등급별 도구)
+// ══════════════════════════════════════
+const GIRLS = [
+  { name:'루나',  full:'루나 · 달빛 마녀',    grade:'★★★ SSR', icon:'🌙', tool:'wand',  skill:'월광 폭발',    hairCol:'#220040', dressCol:'#c040a0', dressCol2:'#e060c8', eyeCol:'#5500aa', ribbonCol:'#ff60b0', owned:true  },
+  { name:'아리아',full:'아리아 · 별빛 용사',  grade:'★★★ SSR', icon:'🌟', tool:'wand',  skill:'별빛 폭풍',    hairCol:'#1a1040', dressCol:'#4040c0', dressCol2:'#6060e0', eyeCol:'#002288', ribbonCol:'#8080ff', owned:false },
+  { name:'하루카',full:'하루카 · 벚꽃 검사',  grade:'★★ SR',   icon:'🌸', tool:'drill', skill:'벚꽃 돌격',   hairCol:'#3a0010', dressCol:'#d05080', dressCol2:'#f070a0', eyeCol:'#880030', ribbonCol:'#ffb0c8', owned:true  },
+  { name:'시로하',full:'시로하 · 빙결 마법사', grade:'★★ SR',   icon:'❄️', tool:'drill', skill:'빙결 창',     hairCol:'#002040', dressCol:'#2090c0', dressCol2:'#40b8e8', eyeCol:'#004488', ribbonCol:'#a0e0ff', owned:false },
+  { name:'카렌',  full:'카렌 · 불꽃 무희',    grade:'★★ SR',   icon:'🔥', tool:'drill', skill:'화염 선풍',   hairCol:'#400000', dressCol:'#c04000', dressCol2:'#e06020', eyeCol:'#880000', ribbonCol:'#ffa060', owned:false },
+  { name:'미도리',full:'미도리 · 초록 정령',  grade:'★ R',     icon:'🍀', tool:'pick',  skill:'새싹 캐기',   hairCol:'#002800', dressCol:'#208040', dressCol2:'#40a060', eyeCol:'#004420', ribbonCol:'#90e090', owned:true  },
+  { name:'아오이',full:'아오이 · 물의 치유사', grade:'★ R',     icon:'💧', tool:'pick',  skill:'물줄기',     hairCol:'#001840', dressCol:'#1060a0', dressCol2:'#2080c0', eyeCol:'#003060', ribbonCol:'#80c8ff', owned:false },
+  { name:'라이코',full:'라이코 · 번개 닌자',  grade:'★ R',     icon:'⚡', tool:'pick',  skill:'번개 찌르기', hairCol:'#202000', dressCol:'#808000', dressCol2:'#b0b000', eyeCol:'#444400', ribbonCol:'#ffff60', owned:false },
+];
+
+// ══════════════════════════════════════
+// 앱 상태
+// ══════════════════════════════════════
+const S = {
+  secs:30*60, totalSecs:30*60, running:true,
+  ore:286, pending:48, ult:72, gems:340,
+  ultActive:false, ultActiveUntil:0,
+  settings:{notif:false,penalty:true,autoRestart:false},
+  customMins:0,        // 유저 설정 시간 (0이면 미사용)
+  sessionStart:Date.now(),
+  girlIdx:0,
+};
+
+const pad = n => String(n).padStart(2,'0');
+const $  = id => document.getElementById(id);
+
+// ── 상태 저장/복원 ──────────────────────
+function saveState(){
+  localStorage.setItem('fm_v2', JSON.stringify({
+    secs:S.secs, totalSecs:S.totalSecs, ore:S.ore, pending:S.pending,
+    ult:S.ult, gems:S.gems, ultActive:S.ultActive, ultActiveUntil:S.ultActiveUntil,
+    girlIdx:S.girlIdx, savedAt:Date.now(), sessionStart:S.sessionStart,
+    autoRestart:S.settings.autoRestart, customMins:S.customMins,
+  }));
+}
+function loadState(){
+  const raw = localStorage.getItem('fm_v2');
+  if(!raw) return;
+  const d = JSON.parse(raw);
+  S.secs=d.secs; S.totalSecs=d.totalSecs; S.ore=d.ore; S.pending=d.pending;
+  S.ult=d.ult; S.gems=d.gems; S.ultActive=d.ultActive&&(d.ultActiveUntil>Date.now());
+  S.ultActiveUntil=d.ultActiveUntil; S.girlIdx=d.girlIdx||0;
+  S.sessionStart=d.sessionStart||Date.now();
+  S.settings.autoRestart=d.autoRestart||false;
+  S.customMins=d.customMins||0;
+  S.running=true;
+}
+
+// ── 이탈/복귀 감지 ───────────────────────
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    S.running=false; saveState();
+  } else {
+    loadState();
+    renderAll();
+    selectGirl(S.girlIdx, false);
+    setRunningUI(true);
+    S.running=true;
+  }
+});
+
+// ── 시계 ────────────────────────────────
+function updateClock(){ const d=new Date(); $('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes()); }
+updateClock(); setInterval(updateClock,1000);
+
+// ── 타이머 렌더 ─────────────────────────
+function renderTimer(){ $('timer').textContent=pad(Math.floor(S.secs/60))+':'+pad(S.secs%60); }
+
+// ── 채굴/궁극기 UI ──────────────────────
+function renderOre(){
+  $('ore-num').textContent=S.ore;
+  $('ore-badge').textContent='+'+S.pending+' 대기';
+  $('collect-badge').textContent='+'+S.pending;
+}
+function renderUlt(){
+  $('ult-fill').style.width=S.ult+'%';
+  $('ult-pct').textContent=S.ultActive?'🌟 발동 중!':S.ult+'%';
+}
+function renderAll(){ renderTimer(); renderOre(); renderUlt(); $('gem-count').textContent=S.gems; }
+
+// ── 궁극기 자동 발동 ─────────────────────
+function fireUlt(){
+  S.ult=0; S.ultActive=true; S.ultActiveUntil=Date.now()+3*60*1000;
+  $('ult-fill').style.background='linear-gradient(90deg,#f0c020,#ff80c0)';
+  $('ult-pct').textContent='🌟 발동 중!';
+  spawnMagic(60);
+  notify('🌟 '+GIRLS[S.girlIdx].skill+'!','3분간 채굴량 3배!');
+  setTimeout(()=>{ S.ultActive=false; $('ult-fill').style.background='linear-gradient(90deg,#ff60b0,#ffe060)'; },3*60*1000);
+}
+
+// ── 메인 tick ────────────────────────────
+setInterval(()=>{
+  if(!S.running) return;
+  if(S.secs>0){ S.secs--; renderTimer(); } else { onSessionDone(); return; }
+  const m=Math.floor((Date.now()-S.sessionStart)/60000);
+  const curEl=$('cur-session'); if(curEl) curEl.textContent=m+'분';
+  $('sess-time').textContent=m+'분';
+  // 1분마다 채굴
+  if(S.secs%60===0&&S.secs>0){
+    const amt=S.ultActive?3:1;
+    S.ore+=amt; S.pending+=amt; renderOre();
+  }
+  // 10초마다 궁극기 +5%
+  if(S.secs%10===0&&!S.ultActive){
+    S.ult=Math.min(100,S.ult+5); renderUlt();
+    if(S.ult>=100) fireUlt();
+  }
+  if(S.secs%5===0) saveState();
+},1000);
+
+function onSessionDone(){
+  S.ore+=5; S.pending+=5; renderOre();
+  notify('✨ 세션 완료!','보너스 망상 조각 5개 획득!');
+  if(S.settings.autoRestart){
+    // 자동 재개: 타이머 리셋 후 바로 시작
+    S.secs=S.totalSecs; S.running=true;
+    renderTimer(); setRunningUI(true);
+    S.sessionStart=Date.now();
+    notify('🔄 자동 재개','새 세션이 시작됐어요!');
+  } else {
+    S.running=false; setRunningUI(false);
+  }
+  saveState();
+}
+
+// ── 타이머 조작 ─────────────────────────
+function setRunningUI(on){
+  $('timer-btn').innerHTML=on?'<i class="ti ti-player-pause"></i> 일시정지':'<i class="ti ti-player-play"></i> 재개';
+  $('mining-dot').style.background=on?'#4ade80':'#ccc';
+  $('mining-label').textContent=on?'채굴 중':'일시정지';
+  girl.swinging=on;
+}
+function toggleTimer(){ S.running=!S.running; setRunningUI(S.running); saveState(); }
+function resetTimer(){ S.secs=S.totalSecs; S.running=true; renderTimer(); setRunningUI(true); S.sessionStart=Date.now(); saveState(); }
+
+// ── 수령 ────────────────────────────────
+function collectAll(){
+  if(S.pending===0) return;
+  S.ore+=S.pending; S.pending=0; renderOre();
+  const b=$('collect-btn'); b.style.background='var(--rose)';
+  b.innerHTML='<i class="ti ti-check" style="font-size:16px;"></i> 수령 완료!';
+  setTimeout(()=>{ b.style.background='var(--pink)'; b.innerHTML='<i class="ti ti-package-import" style="font-size:16px;"></i> 모두 수령하기 <span class="c-badge" id="collect-badge">+0</span>'; },2000);
+}
+
+// ── 소녀 탭 ─────────────────────────────
+const tabsEl=$('girl-tabs');
+GIRLS.forEach((g,i)=>{
+  const d=document.createElement('div');
+  d.className='gtab'+(i===0?' on':'');
+  d.innerHTML=g.icon+' '+g.name;
+  d.onclick=()=>selectGirl(i,true);
+  if(!g.owned) d.style.opacity='0.5';
+  tabsEl.appendChild(d);
+});
+
+function selectGirl(idx, save=true){
+  S.girlIdx=idx;
+  document.querySelectorAll('.gtab').forEach((t,i)=>t.className='gtab'+(i===idx?' on':''));
+  const g=GIRLS[idx];
+  $('hud-name').textContent=g.icon+' '+g.full;
+  $('hud-grade').textContent=g.grade;
+  $('ult-skill').textContent=g.skill;
+  $('timer-sub').textContent='집중하는 동안 '+g.name+'가 망상을 채굴해요';
+  Object.assign(girl, g);
+  if(save) saveState();
+}
+
+// ── 소녀 도감 ───────────────────────────
+const grid=$('char-grid');
+GIRLS.forEach(g=>{
+  const d=document.createElement('div');
+  d.className='mini-char'+(g.owned?'':' locked');
+  d.innerHTML=`<div class="mini-face">${g.owned?g.icon:'❓'}</div>
+    <div class="mini-name rnd">${g.owned?g.name:'???'}</div>
+    <div class="mini-grade">${g.owned?g.grade:'미획득'}</div>
+    <div class="mini-bar-w"><div class="mini-bar" style="width:${g.owned?(g.grade.includes('SSR')?88:g.grade.includes('SR')?54:32):0}%;"></div></div>`;
+  grid.appendChild(d);
+});
+
+// ── 페이지 전환 ─────────────────────────
+function goPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
+  $('page-'+name).classList.add('active');
+  el.classList.add('on');
+  document.querySelector('.scroll-body').scrollTop=0;
+  // 채굴 씬 홈에서만 표시
+  $('scene-wrap').style.display=name==='home'?'block':'none';
+  $('girl-tabs').style.display=name==='home'?'flex':'none';
+}
+
+// ── 주간 차트 ───────────────────────────
+const weekData=[{lbl:'월',min:95},{lbl:'화',min:120},{lbl:'수',min:60},{lbl:'목',min:150},{lbl:'금',min:80},{lbl:'토',min:110},{lbl:'일',min:45}];
+const wc=$('week-chart'); const maxMin=Math.max(...weekData.map(d=>d.min));
+weekData.forEach(d=>{
+  const col=document.createElement('div'); col.className='bar-col';
+  col.innerHTML=`<div class="bar-bg"><div class="bar-fill" style="height:${Math.round(d.min/maxMin*100)}%;"></div></div><div class="bar-lbl">${d.lbl}</div>`;
+  wc.appendChild(col);
+});
+
+// ── 가챠 ────────────────────────────────
+const pool=GIRLS.map(g=>({...g,rarity:g.grade.includes('SSR')?'★★★ SSR 획득!!':g.grade.includes('SR')?'★★ SR 획득!':'★ R 획득'}));
+function getRand(){ const r=Math.random(); return r<0.03?pool.filter(p=>p.grade.includes('SSR'))[Math.floor(Math.random()*2)]:r<0.20?pool.filter(p=>p.grade.includes('SR')&&!p.grade.includes('SSR'))[Math.floor(Math.random()*3)]:pool.filter(p=>p.grade.includes('R')&&!p.grade.includes('SR'))[Math.floor(Math.random()*3)]; }
+function showGacha(item){ $('gacha-emoji').textContent=item.icon;$('gacha-name').textContent=item.full;$('gacha-rarity').textContent=item.rarity;const el=$('gacha-result');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500); }
+function doGacha(){ if(S.gems<150){alert('젬이 부족해요!');return;} S.gems-=150;$('gem-count').textContent=S.gems;showGacha(getRand()); }
+function doGacha10(){ if(S.gems<1400){alert('젬이 부족해요!');return;} S.gems-=1400;$('gem-count').textContent=S.gems;showGacha(getRand()); }
+
+// ── 설정 ────────────────────────────────
+function toggleSetting(key){
+  S.settings[key]=!S.settings[key];
+  const el=$('tog-'+key); if(el) el.className='toggle '+(S.settings[key]?'on':'off');
+  if(key==='notif'&&S.settings.notif) requestNotif();
+  saveState();
+}
+function setDuration(min,btn){
+  S.totalSecs=min*60; S.secs=S.totalSecs; S.running=false; S.customMins=0;
+  renderTimer();
+  $('timer-btn').innerHTML='<i class="ti ti-player-play"></i> 시작';
+  document.querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('sel'));
+  if(btn) btn.classList.add('sel');
+  // 유저 설정 입력창 초기화
+  const inp=$('custom-input'); if(inp) inp.value='';
+  saveState();
+}
+function applyCustomTime(){
+  const inp=$('custom-input');
+  const min=parseInt(inp.value);
+  if(!min||min<1||min>999){ inp.style.borderColor='#e05090'; return; }
+  inp.style.borderColor='var(--pink-b)';
+  S.customMins=min; S.totalSecs=min*60; S.secs=S.totalSecs; S.running=false;
+  renderTimer();
+  $('timer-btn').innerHTML='<i class="ti ti-player-play"></i> 시작';
+  document.querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('sel'));
+  saveState();
+}
+
+// ── 알림 ────────────────────────────────
+async function requestNotif(){ if(!('Notification'in window))return;const p=await Notification.requestPermission();S.settings.notif=p==='granted';$('tog-notif').className='toggle '+(S.settings.notif?'on':'off'); }
+function notify(title,body){ if(!S.settings.notif||Notification.permission!=='granted')return;new Notification(title,{body,icon:'./icons/icon-192.png'}); }
+
+// ══════════════════════════════════════
+// Canvas 채굴 애니메이션
+// ══════════════════════════════════════
+const cv=$('mine-cv'); const ctx=cv.getContext('2d');
+const W=340,H=210;
+
+const layers=[
+  {y:0,h:28,c:'#2a0845'},{y:28,h:20,c:'#4b0082'},{y:48,h:18,c:'#1a3a8f'},
+  {y:66,h:18,c:'#0a6e3f'},{y:84,h:18,c:'#7a6800'},{y:102,h:18,c:'#8a3200'},
+  {y:120,h:22,c:'#6a0020'},{y:142,h:68,c:'#12001e'},
+];
+const oreP=[],magP=[],cracks=[];
+let shakeX=0,shakeY=0,wallX=W*0.7,swingT=0,frame=0,lastHit=0;
+const minWall=W*0.35;
+const stars=[];
+for(let i=0;i<30;i++) stars.push({x:Math.random()*W*0.32,y:Math.random()*H,r:Math.random()*1.2+.3,a:Math.random()});
+
+const girl={...GIRLS[0],swinging:true};
+
+function spawnOre(x,y){ const cols=['#ff80d0','#ffe060','#80ffcc','#80c0ff','#ffaa60','#c0ff80'];for(let i=0;i<5;i++) oreP.push({x,y,vx:(Math.random()-.5)*5,vy:-(Math.random()*3+2),r:Math.random()*4+2,c:cols[Math.floor(Math.random()*cols.length)],life:1}); }
+function spawnMagic(n){ for(let i=0;i<n;i++) magP.push({x:W*0.55,y:90,vx:(Math.random()-.5)*7,vy:-(Math.random()*5+1),r:Math.random()*5+2,c:`hsl(${Math.random()*360},100%,70%)`,life:1}); }
+function spawnCrack(x,y){ for(let i=0;i<4;i++) cracks.push({x,y,angle:(Math.random()*Math.PI)-(Math.PI/2),len:Math.random()*22+10,life:1}); }
+function shake(){ shakeX=(Math.random()-.5)*6;shakeY=(Math.random()-.5)*4; }
+
+function drawGirl(g,gx,gy,swing,hit){
+  ctx.save();ctx.translate(gx,gy);
+  ctx.fillStyle='rgba(0,0,0,0.22)';ctx.beginPath();ctx.ellipse(0,28,16,5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=g.dressCol;ctx.beginPath();ctx.ellipse(0,14,11,16,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=g.dressCol2;ctx.beginPath();ctx.ellipse(0,8,8,10,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f8e0f8';ctx.beginPath();ctx.arc(0,-6,10,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=g.hairCol;ctx.beginPath();ctx.arc(0,-10,10,Math.PI,2*Math.PI);ctx.fill();ctx.beginPath();ctx.arc(-8,-4,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=g.ribbonCol;ctx.beginPath();ctx.arc(6,-14,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(3,-6,2.5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-3,-6,2.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=g.eyeCol;ctx.beginPath();ctx.arc(3,-6,1.4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-3,-6,1.4,0,Math.PI*2);ctx.fill();
+
+  if(g.tool==='pick'){
+    ctx.save();ctx.translate(10,4);ctx.rotate(swing-0.4);
+    ctx.strokeStyle='#8b5c1a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(18,14);ctx.stroke();
+    ctx.fillStyle='#c0c8d8';ctx.beginPath();ctx.moveTo(18,14);ctx.lineTo(28,6);ctx.lineTo(24,18);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#888fa0';ctx.lineWidth=1;ctx.stroke();
+    if(hit){ctx.shadowColor='#fff';ctx.shadowBlur=10;ctx.fillStyle='#ffffff88';ctx.beginPath();ctx.arc(26,10,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+    ctx.restore();
+  } else if(g.tool==='drill'){
+    ctx.save();ctx.translate(10,4);ctx.rotate(swing-0.3);
+    ctx.strokeStyle='#6a4010';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(16,12);ctx.stroke();
+    ctx.fillStyle='#b0b8c8';ctx.beginPath();ctx.moveTo(16,12);ctx.lineTo(32,8);ctx.lineTo(32,16);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#606878';ctx.lineWidth=1.5;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(18+i*4,12);ctx.lineTo(20+i*4,16);ctx.stroke();}
+    ctx.fillStyle='#e0e8f0';ctx.beginPath();ctx.moveTo(32,8);ctx.lineTo(38,12);ctx.lineTo(32,16);ctx.closePath();ctx.fill();
+    if(hit){ctx.shadowColor='#c0e0ff';ctx.shadowBlur=12;ctx.fillStyle='rgba(160,210,255,0.5)';ctx.beginPath();ctx.arc(38,12,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;for(let i=0;i<3;i++) oreP.push({x:wallX,y:gy+Math.random()*20-10,vx:(Math.random()-.5)*3,vy:-(Math.random()*2+1),r:2,c:'#c0e0ff',life:.8});}
+    ctx.restore();
+  } else {
+    ctx.save();ctx.translate(10,2);ctx.rotate(swing-0.6);
+    ctx.strokeStyle='#d4a020';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(22,18);ctx.stroke();
+    const sx=22,sy=18;ctx.fillStyle='#fff060';ctx.beginPath();
+    for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2,a2=a+Math.PI/5;i===0?ctx.moveTo(sx+Math.cos(a)*8,sy+Math.sin(a)*8):ctx.lineTo(sx+Math.cos(a)*8,sy+Math.sin(a)*8);ctx.lineTo(sx+Math.cos(a2)*4,sy+Math.sin(a2)*4);}
+    ctx.closePath();ctx.fill();
+    if(hit){ctx.shadowColor='#ffe060';ctx.shadowBlur=18;ctx.fillStyle='rgba(255,240,100,0.55)';ctx.beginPath();ctx.arc(sx,sy,12,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;spawnMagic(10);}
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function draw(){
+  frame++;ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(shakeX,shakeY);shakeX*=0.8;shakeY*=0.8;
+  layers.forEach(l=>{const gr=ctx.createLinearGradient(0,l.y,W,l.y+l.h);gr.addColorStop(0,l.c);gr.addColorStop(0.7,l.c);gr.addColorStop(1,'#000');ctx.fillStyle=gr;ctx.fillRect(0,l.y,W,l.h);ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(0,l.y);ctx.lineTo(W,l.y);ctx.stroke();});
+  ctx.fillStyle='rgba(5,0,20,0.82)';ctx.fillRect(0,24,wallX,H-24);
+  const wg=ctx.createLinearGradient(wallX,0,W,0);wg.addColorStop(0,'rgba(0,0,0,0)');wg.addColorStop(0.04,'rgba(180,80,255,0.9)');wg.addColorStop(0.1,'rgba(60,80,255,0.85)');wg.addColorStop(0.2,'rgba(0,180,80,0.85)');wg.addColorStop(0.35,'rgba(220,200,0,0.85)');wg.addColorStop(0.55,'rgba(255,100,0,0.85)');wg.addColorStop(0.75,'rgba(220,0,40,0.85)');wg.addColorStop(1,'rgba(80,0,20,0.9)');ctx.fillStyle=wg;ctx.fillRect(wallX,0,W-wallX,H);
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.fillRect(0,24,wallX,16);ctx.fillRect(0,H-18,wallX,18);
+  stars.forEach(s=>{s.a+=.005;ctx.fillStyle=`rgba(255,220,255,${.3+.3*Math.sin(s.a)})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});
+  cracks.forEach(c=>{ctx.save();ctx.globalAlpha=c.life;ctx.strokeStyle='rgba(255,220,120,0.8)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x+Math.cos(c.angle)*c.len,c.y+Math.sin(c.angle)*c.len);ctx.stroke();ctx.restore();c.life-=.05;});
+  for(let i=cracks.length-1;i>=0;i--) if(cracks[i].life<=0) cracks.splice(i,1);
+
+  const gx=W*0.55,gy=100;
+  if(girl.swinging) swingT+=0.07;
+  const swing=girl.swinging?Math.sin(swingT)*0.55:0;
+  const hit=Math.abs(Math.sin(swingT))>0.95&&girl.swinging;
+  if(hit&&frame-lastHit>12){lastHit=frame;spawnOre(wallX,gy+Math.random()*30-15);spawnCrack(wallX,gy+Math.random()*20-10);shake();if(wallX>minWall)wallX-=0.5;else wallX=W*0.7;}
+  drawGirl(girl,gx,gy,swing,hit&&frame-lastHit<=2);
+  if(girl.swinging){const glow=Math.abs(Math.sin(swingT));const rg=ctx.createRadialGradient(wallX,gy,0,wallX,gy,44);rg.addColorStop(0,`rgba(255,255,200,${glow*0.45})`);rg.addColorStop(1,'rgba(255,255,200,0)');ctx.fillStyle=rg;ctx.fillRect(wallX-10,gy-44,54,88);}
+  oreP.forEach(o=>{o.x+=o.vx;o.y+=o.vy;o.vy+=.2;o.life-=.025;ctx.save();ctx.globalAlpha=Math.max(0,o.life);ctx.fillStyle=o.c;ctx.shadowColor=o.c;ctx.shadowBlur=6;ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+  for(let i=oreP.length-1;i>=0;i--) if(oreP[i].life<=0) oreP.splice(i,1);
+  magP.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.1;p.life-=.02;ctx.save();ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;ctx.shadowColor=p.c;ctx.shadowBlur=8;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();});
+  for(let i=magP.length-1;i>=0;i--) if(magP[i].life<=0) magP.splice(i,1);
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+draw();
+
+// ── PWA 서비스워커 ───────────────────────
+if('serviceWorker'in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// ── 초기화 ──────────────────────────────
+loadState();
+renderAll();
+selectGirl(S.girlIdx,false);
+setRunningUI(S.running);
+// 설정 토글 UI 동기화
+$('tog-autoRestart').className='toggle '+(S.settings.autoRestart?'on':'off');
+// 직접 설정 시간 복원
+if(S.customMins>0){ const inp=$('custom-input'); if(inp) inp.value=S.customMins; }
+</script>
+</body>
+</html>
